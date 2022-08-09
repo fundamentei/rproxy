@@ -5,17 +5,29 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/md5"
-	"encoding/base64"
 	"encoding/hex"
-	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
+	"os"
 	"strings"
 )
 
 func main() {
 	key := aesKey("foo")
-	data := []byte("{}")
-	fmt.Println(aesEncrypt(key, data))
+	data, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		log.Fatal(err)
+	}
+	enc, err := aesEncrypt(key, data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(os.Args) > 1 {
+		os.WriteFile(os.Args[1], enc, 0644)
+	} else {
+		os.Stdout.Write(enc)
+	}
 }
 
 func newTestIV() io.Reader {
@@ -31,10 +43,10 @@ func aesKey(input string) []byte {
 	return []byte(key)
 }
 
-func aesEncrypt(key []byte, input []byte) (encoded string, err error) {
+func aesEncrypt(key []byte, input []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	payload, _ := pkcs7Padding(input, aes.BlockSize)
@@ -44,13 +56,13 @@ func aesEncrypt(key []byte, input []byte) (encoded string, err error) {
 	// https://www.rfc-editor.org/rfc/rfc5246#section-6.2.3.2
 	iv := output[:aes.BlockSize]
 	if _, err := io.ReadFull(newTestIV(), iv); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(output[aes.BlockSize:], payload)
 
-	return base64.RawURLEncoding.EncodeToString(output), err
+	return output, nil
 }
 
 func withPadding(payload []byte, blockSize int) []byte {
