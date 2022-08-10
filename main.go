@@ -326,6 +326,9 @@ func run() error {
 }
 
 func main() {
+	msg, _ := aesEncrypt(aesKey("foo123"), []byte("hello world"))
+	fmt.Println(msg)
+
 	if err := run(); err != nil {
 		log.Fatal(err)
 	}

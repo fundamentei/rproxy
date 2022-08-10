@@ -5,10 +5,19 @@
   </head>
   <body>
     <script type="module">
-      import init, { proxy } from "./dist/asma/main.js";
+      import init, { proxy, build_info } from "./dist/asma/main.js";
       (async () => {
         await init();
-        console.log(await proxy("MTIzNDU2NzgxMjM0NTY3OC0Q353Kx8nfUcnX9rOApU0", "foo"));
+        // console.log(await build_info());
+        console.log(
+          await proxy(
+            [
+              244, 114, 77, 180, 39, 123, 24, 63, 163, 235, 83, 105, 244, 123, 171, 95, 128, 94, 209, 10, 115, 23, 251,
+              106, 22, 182, 128, 71, 142, 102, 145, 44
+            ],
+            "foo"
+          )
+        );
       })();
     </script>
   </body>

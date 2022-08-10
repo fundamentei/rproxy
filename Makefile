@@ -6,7 +6,7 @@ SLS := node_modules/.bin/serverless
 
 build-asma::
 	@mkdir -p dist/asma
-	@wasm-pack build --target web asma
+	@SHARED_KEY_SALT=$(salt) wasm-pack build --no-typescript --target web asma
 
 # Copy distribution files
 	@cp asma/pkg/asma.js $(JS_PATH)
