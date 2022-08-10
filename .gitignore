@@ -1,3 +1,7 @@
 asma/target/*
 asma/pkg/*
 dist/
+node_modules/
+serverless.yml
+pnpm-lock.yaml
+package.json
