@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/NYTimes/gziphandler"
@@ -35,7 +36,7 @@ type handler struct {
 // NewHandler is for creating a new handler
 func NewHandler(cfg *Config) http.Handler {
 	return gziphandler.GzipHandler(dodgeFaviconRequest(logIncomingRequest(&handler{
-		sharedKeySalt:        cfg.General.SharedKeySalt,
+		sharedKeySalt:        strings.TrimSpace(cfg.General.SharedKeySalt),
 		isEncryptedHeaderKey: cfg.General.IsEncryptedHeaderKey,
 
 		allowedMethods:  cfg.General.AllowedMethods,
@@ -54,24 +55,30 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Verify if the method we're requesting the destination with is allowed
 	if !lo.Contains(h.allowedMethods, r.Method) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		log.Printf(
+			"Couldn't proxy the request to the destination since the provided method is not allowed. Wanted: %s. Got: %q",
+			strings.Join(h.allowedMethods, ", "),
+			r.Method,
+		)
 		return
 	}
 	// Parse the incoming URL being proxied
 	proxyToURL, err := requestURIToProxyURL(r.RequestURI)
 	if proxyToURL == nil || err != nil || proxyToURL.Scheme == "" || proxyToURL.Host == "" {
 		w.WriteHeader(http.StatusBadRequest)
+		log.Printf("Couldn't proxy the request due to invalid request URI: %q", r.RequestURI)
 		return
 	}
 	// Verify if the "Host" we're proxying to is blacklisted. This is primarly useful to avoid recursive proxying
 	if h.isHostInGlobList(h.disallowedHosts, proxyToURL.Host) {
-		log.Printf("Denying request to Host: %q", proxyToURL.Host)
 		w.WriteHeader(http.StatusForbidden)
+		log.Printf("Denying request to Host: %q", proxyToURL.Host)
 		return
 	}
 	// Verify if the "Host" we're proxying to is whitelisted
 	if !h.isHostInGlobList(h.allowedHosts, proxyToURL.Host) {
-		log.Printf("Denying request to Host: %q", proxyToURL.Host)
 		w.WriteHeader(http.StatusForbidden)
+		log.Printf("Denying request to Host: %q", proxyToURL.Host)
 		return
 	}
 
@@ -79,6 +86,10 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	preq, err := http.NewRequest(r.Method, fmt.Sprintf("%s://%s", proxyToURL.Scheme, proxyToURL.Host), r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		log.Printf(
+			"Couldn't proxy the request to the destination because we weren't able to re-create the request: %q",
+			r.RequestURI,
+		)
 		return
 	}
 
@@ -88,17 +99,25 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.copyHeaders(preq.Header, r.Header)
 	h.delHopHeaders(preq.Header)
 
-	pres, err := h.httpClient.Do(preq)
+	forwardedFor := realIP(r)
+	// If we aren't the first proxy retain prior X-Forwarded-For information as a comma+space separated list and fold
+	// multiple headers into one
+	// if prior, ok := preq.Header[hXForwardedFor]; ok {
+	// 	forwardedFor = strings.Join(prior, ", ") + ", " + forwardedFor
+	// }
+	// preq.Header.Set(hXForwardedFor, forwardedFor)
+
 	// Provide context information for logging
 	logDetailsLine := fmt.Sprintf(
 		"%s %s %q %s %q",
-		realIP(r),
+		forwardedFor,
 		r.Method,
 		proxyToURL,
 		r.Proto,
 		r.UserAgent(),
 	)
 
+	pres, err := h.httpClient.Do(preq)
 	if err != nil {
 		if pres != nil {
 			w.WriteHeader(pres.StatusCode)
@@ -123,6 +142,15 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	)
 
 	defer pres.Body.Close()
+
+	// Handle OPTIONS method
+	if r.Method == http.MethodOptions {
+		h.copyHeaders(w.Header(), pres.Header)
+		w.WriteHeader(pres.StatusCode)
+		// Don't even need to copy the body
+		return
+	}
+
 	brd := io.LimitReader(pres.Body, int64(h.maxResponseSizeInKb*1024))
 	if pres.Header.Get(http.CanonicalHeaderKey(hContentEncoding)) == "gzip" {
 		if gzr, err := gzip.NewReader(brd); gzr != nil && err == nil {
@@ -130,13 +158,16 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			brd = gzr
 		}
 	}
+
 	body, err := ioutil.ReadAll(brd)
 	if err != nil {
+		log.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	authorization := pres.Header.Get(hAuthorization)
+	// Handle encryption
+	authorization := strings.TrimSpace(pres.Header.Get(hAuthorization))
 	key := aesKey(authorization + h.sharedKeySalt)
 	erb, err := aesEncrypt(key, body)
 	if err != nil {

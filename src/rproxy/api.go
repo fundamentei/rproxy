@@ -2,20 +2,32 @@ package rproxy
 
 import (
 	"encoding/base64"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
 )
 
 func realIP(r *http.Request) string {
-	ip := r.Header.Get("X-Real-Ip")
-	if ip == "" {
-		ip = r.Header.Get("X-Forwarded-For")
+	// The default is the originating IP, but we try to find better options because this is almost never the right IP
+	if parts := strings.Split(r.RemoteAddr, ":"); len(parts) == 2 {
+		return parts[0]
 	}
-	if ip == "" {
-		ip = r.RemoteAddr
+	// We'll take the address from "X-Forwarded-For" if it's there
+	if xff := strings.Trim(r.Header.Get("X-Forwarded-For"), ","); len(xff) > 0 {
+		addrs := strings.Split(xff, ",")
+		last := addrs[len(addrs)-1]
+		if ip := net.ParseIP(last); ip != nil {
+			return ip.String()
+		}
 	}
-	return ip
+	// Parse X-Real-Ip header if it's there
+	if xri := r.Header.Get("X-Real-Ip"); len(xri) > 0 {
+		if ip := net.ParseIP(xri); ip != nil {
+			return ip.String()
+		}
+	}
+	return ""
 }
 
 // requestURIToProxyURL is for fetching the destination URL from the request. It allows the following inputs:

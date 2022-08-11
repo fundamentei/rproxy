@@ -2,7 +2,7 @@
 allowedHosts = ["*.fundamentei.io", "*.fundamentei.com", "*.fndm.to", "localhost:*", "localhost", "httpbin.org"]
 allowedMethods = ["GET", "POST", "OPTIONS"]
 # Use ":0" if you want to bind on the next available port
-listen = ":25259"
+listen = ":25256"
 # This is mainly to avoid recursion
 disallowedHosts = ["rproxy.fundamentei.io", "rproxy.fndm.to"]
 isEncryptedHeaderKey = "X-Fndm-Is-Encrypted"
