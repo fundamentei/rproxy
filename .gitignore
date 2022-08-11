@@ -5,3 +5,4 @@ node_modules/
 serverless.yml
 pnpm-lock.yaml
 package.json
+.serverless
