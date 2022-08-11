@@ -6,6 +6,12 @@ The central idea behind the proxy is that it forwards the requests to the underl
 handles the decryption through WASM. Why WASM? Because nobody knows how to decrypt binary to understand what the
 fuck we're doing under the hood—and if they do, they deserve to access the data.
 
+## How do I use it?
+
+```SH
+
+```
+
 ## How does it work?
 
 ![The standard request flow](./static/The%20standard%20request%20flow.png)

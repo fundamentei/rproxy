@@ -1,0 +1,21 @@
+[general]
+allowedHosts = ["*.fundamentei.io", "*.fundamentei.com", "*.fndm.to", "localhost:*", "localhost", "httpbin.org"]
+allowedMethods = ["GET", "POST", "OPTIONS"]
+# Use ":0" if you want to bind on the next available port
+listen = ":25259"
+# This is mainly to avoid recursion
+disallowedHosts = ["rproxy.fundamentei.io", "rproxy.fndm.to"]
+isEncryptedHeaderKey = "X-Fndm-Is-Encrypted"
+sharedKeySalt = "15365230-aa22-4f5f-aa46-f86076a0b6b2"
+
+[limits]
+maxRequestSizeInKb = 10
+maxResponseSizeInKb = 10
+
+[timeouts]
+clientTimeout = 10
+dialerTimeout = 10
+expectContinueTimeout = 10
+idleConnTimeout = 10
+responseHeaderTimeout = 10
+tlsHandshakeTimeout = 10
