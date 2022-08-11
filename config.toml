@@ -6,7 +6,15 @@ listen = ":25256"
 # This is mainly to avoid recursion
 disallowedHosts = ["rproxy.fundamentei.io", "rproxy.fndm.to"]
 isEncryptedHeaderKey = "X-Fndm-Is-Encrypted"
-sharedKeySalt = "15365230-aa22-4f5f-aa46-f86076a0b6b2"
+sharedKey = "15365230-aa22-4f5f-aa46-f86076a0b6b2"
+
+[cors]
+allowCredentials = true
+allowedHeaders = ["*"]
+allowedMethods = ["GET", "POST", "OPTIONS"]
+allowedOrigins = ["*"]
+exposedHeaders = ["Authorization", "X-Fndm-Is-Encrypted"]
+maxAge = 3600
 
 [limits]
 maxConnsPerHost = 0
@@ -23,12 +31,3 @@ expectContinueTimeout = 10
 idleConnTimeout = 90
 responseHeaderTimeout = 20
 tlsHandshakeTimeout = 10
-
-[cors]
-allowCredentials = true
-allowPrivateNetwork = true
-allowedHeaders = ["*"]
-allowedMethods = ["GET", "POST", "OPTIONS"]
-allowedOrigins = ["*"]
-exposedHeaders = []
-maxAge = 3600

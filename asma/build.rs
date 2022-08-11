@@ -17,11 +17,11 @@ pub fn main() {
     build_data::set_RUSTC_VERSION();
     build_data::set_RUSTC_VERSION_SEMVER();
     build_data::set_RUST_CHANNEL();
-    let shared_key_salt = get_env("SHARED_KEY_SALT").unwrap();
-    if !shared_key_salt.is_none() {
+    let shared_key = get_env("SHARED_KEY").unwrap();
+    if !shared_key.is_none() {
         println!(
-            "cargo:rustc-env=SHARED_KEY_SALT={}",
-            shared_key_salt.unwrap().to_string()
+            "cargo:rustc-env=SHARED_KEY={}",
+            shared_key.unwrap().to_string()
         );
     }
 }

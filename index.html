@@ -9,32 +9,23 @@
       (async () => {
         await init();
 
-        console.log(
-          await fetch("http://localhost:25256/https://production.api-lambda.fundamentei.io/", {
-            method: "POST",
-            body: JSON.stringify({
-              query: "query Now { now }",
-              variables: {},
-              operationName: "Now"
-            }),
-            headers: {
-              "x-forwarded-for": "localhost:8000",
-              authorization:
-                "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVkYTM3OWQ2ZGIxOGJiNzAzNTU0Y2QyOCIsImZpcnN0TmFtZSI6IkFuZHJleSIsImxhc3ROYW1lIjoiS251cHAgVml0YWwiLCJwaWN0dXJlVXJsIjpudWxsLCJlbWFpbCI6ImFuZHJleWt2aXRhbEBnbWFpbC5jb20ifSwiaWF0IjoxNjU5NzMwMDA3LCJleHAiOjE2Njc1MDYwMDd9.YKA0GvrC0V_hdYsS_Xfz4KsRNYaG25A5VR1P3BlmKB89HM076GlcuQgDU7TJ7B5haw5xfO0lgLFof3Mz-nQrJA"
-            }
-          })
-        );
+        const authorization =
+          "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVkYTM3OWQ2ZGIxOGJiNzAzNTU0Y2QyOCIsImZpcnN0TmFtZSI6IkFuZHJleSIsImxhc3ROYW1lIjoiS251cHAgVml0YWwiLCJwaWN0dXJlVXJsIjpudWxsLCJlbWFpbCI6ImFuZHJleWt2aXRhbEBnbWFpbC5jb20ifSwiaWF0IjoxNjU5NzMwMDA3LCJleHAiOjE2Njc1MDYwMDd9.YKA0GvrC0V_hdYsS_Xfz4KsRNYaG25A5VR1P3BlmKB89HM076GlcuQgDU7TJ7B5haw5xfO0lgLFof3Mz-nQrJA";
+        const response = await fetch("http://localhost:25256/https://production.api-lambda.fundamentei.io/", {
+          method: "POST",
+          body: JSON.stringify({
+            query: "query Now { now }",
+            variables: {},
+            operationName: "Now"
+          }),
+          headers: {
+            "content-type": "application/json",
+            authorization
+          }
+        });
 
-        console.log(await build_info());
-        console.log(
-          await proxy(
-            [
-              244, 114, 77, 180, 39, 123, 24, 63, 163, 235, 83, 105, 244, 123, 171, 95, 128, 94, 209, 10, 115, 23, 251,
-              106, 22, 182, 128, 71, 142, 102, 145, 44
-            ],
-            "foo"
-          )
-        );
+        const bytes = await response.arrayBuffer();
+        console.log(await proxy(new Uint8Array(bytes), authorization));
       })();
     </script>
   </body>

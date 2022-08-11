@@ -11,10 +11,11 @@ type Config struct {
 }
 
 type general struct {
-	// This should be defined if you care about full encryption. Since this proxy is known for the use of `Authorization`
-	// header to encrypt the traffic, by adding a salt that's only known between the proxy and the client, we can ensure
-	// that nothing will leak
-	SharedKeySalt        string   `toml:"sharedKeySalt"`
+	// This should be defined if you care about full encryption. Since this proxy is known for its use of `Authorization`
+	// header to encrypt the traffic, by adding a shared key that's only known between the proxy and the client, we can
+	// ensure that nothing will leak since nobody will be able to know that key that's only shared among the VM and the
+	// proxy
+	SharedKey            string   `toml:"sharedKey"`
 	IsEncryptedHeaderKey string   `toml:"isEncryptedHeaderKey"`
 	AllowedHosts         []string `toml:"allowedHosts"`
 	DisallowedHosts      []string `toml:"disallowedHosts"`

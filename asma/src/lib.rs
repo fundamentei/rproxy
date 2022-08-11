@@ -6,13 +6,13 @@ use md5::compute as md5_digest;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 
-type Aes256Cbc = Cbc<Aes256, Pkcs7>;
-
 // macro_rules! log {
 //     ($($t:tt)*) => {
 //         web_sys::console::log_1(&format!($($t)*).into());
 //     }
 // }
+
+type Aes256Cbc = Cbc<Aes256, Pkcs7>;
 
 #[wasm_bindgen]
 pub fn build_info() -> JsValue {
@@ -38,12 +38,12 @@ pub fn build_info() -> JsValue {
 }
 
 #[wasm_bindgen]
-pub fn proxy(payload_with_iv: Box<[u8]>, jwt_token: &str) -> Result<String, JsError> {
+pub fn proxy(payload_with_iv: Box<[u8]>, raw_key: &str) -> Result<String, JsError> {
     // Improve by using SHA 256 bytes only
-    let mut key = jwt_token.to_owned();
-    let shared_key_salt = option_env!("SHARED_KEY_SALT");
-    if !shared_key_salt.is_none() {
-        key.push_str(shared_key_salt.unwrap())
+    let mut key = raw_key.to_owned();
+    let shared_key = option_env!("SHARED_KEY");
+    if !shared_key.is_none() {
+        key.push_str(shared_key.unwrap())
     }
     let final_key = format!("{:x}", md5_digest(key));
 

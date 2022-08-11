@@ -31,7 +31,7 @@ func run() error {
 		return err
 	}
 
-	warnIfMissingSharedKeySalt(cfg)
+	warnIfMissingSharedKey(cfg)
 
 	// Make sure the provided config is valid by trying to parse it
 	if _, _, err := net.SplitHostPort(cfg.General.Listen); err != nil {
@@ -48,14 +48,14 @@ func run() error {
 	return http.Serve(l, handler)
 }
 
-func warnIfMissingSharedKeySalt(cfg *rproxy.Config) {
-	if cfg.General.SharedKeySalt == "" {
+func warnIfMissingSharedKey(cfg *rproxy.Config) {
+	if cfg.General.SharedKey == "" {
 		log.Println(
-			"WARNING: A shared key salt wasn't provided, what this means is that the traffic won't be fully encrypted. " +
+			"WARNING: A shared key wasn't provided, what this means is that the traffic won't be fully encrypted. " +
 				"Why? Because this proxy is known for its usage of the `Authorization` header to encrypt the responses, " +
 				"meaning that the person authenticated will be able to leak the data. Also, it won't be always that the " +
 				"`Authorization` header will be present, and you'll still want to encrypt all parts of the public " +
-				"traffic as well. This is a security risk, and you should consider adding a salt.",
+				"traffic as well. This is a security risk, and you should consider adding a shared key.",
 		)
 	}
 }

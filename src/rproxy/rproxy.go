@@ -20,7 +20,7 @@ import (
 
 type handler struct {
 	// General
-	sharedKeySalt        string
+	sharedKey            string
 	isEncryptedHeaderKey string
 
 	allowedMethods  []string
@@ -53,7 +53,7 @@ func withMiddlewares(handler http.Handler, middlewares []middlewareFunc) http.Ha
 func NewHandler(cfg *Config) http.Handler {
 
 	proxy := &handler{
-		sharedKeySalt:        strings.TrimSpace(cfg.General.SharedKeySalt),
+		sharedKey:            strings.TrimSpace(cfg.General.SharedKey),
 		isEncryptedHeaderKey: cfg.General.IsEncryptedHeaderKey,
 
 		allowedMethods:  cfg.General.AllowedMethods,
@@ -138,7 +138,12 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Rebuilds from scratch the URL we're proxying to
-	preq, err := http.NewRequest(r.Method, fmt.Sprintf("%s://%s", proxyToURL.Scheme, proxyToURL.Host), r.Body)
+	preq, err := http.NewRequest(
+		r.Method,
+		fmt.Sprintf("%s://%s", proxyToURL.Scheme, proxyToURL.Host),
+		// Limit the amount of data we read from the request before passing it to the destination
+		io.LimitReader(r.Body, int64(h.maxRequestSizeInKb)*1024),
+	)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Printf(
@@ -222,8 +227,8 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Handle encryption
-	authorization := strings.TrimSpace(pres.Header.Get(hAuthorization))
-	key := aesKey(authorization + h.sharedKeySalt)
+	authorization := strings.TrimSpace(r.Header.Get(hAuthorization))
+	key := aesKey(authorization + h.sharedKey)
 	erb, err := aesEncrypt(key, body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -232,7 +237,6 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// We're ready to start transfering the encrypted response
-	w.Header().Del(hContentLength)
 	w.Header().Set(hContentLength, strconv.Itoa(len(erb)))
 	w.Header().Set(h.isEncryptedHeaderKey, "true")
 	w.WriteHeader(pres.StatusCode)
