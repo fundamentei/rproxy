@@ -25,29 +25,29 @@ type general struct {
 }
 
 type limits struct {
-	MaxRequestSizeInKB    uint32 `toml:"maxRequestSizeInKb"`
-	MaxResponseSizeInKB   uint32 `toml:"maxResponseSizeInKb"`
-	maxIdleConns          int    `toml:"maxIdleConns"`
-	maxIdleConnsPerHost   int    `toml:"maxIdleConnsPerHost"`
-	maxConnsPerHost       int    `toml:"maxConnsPerHost"`
-	maxResponseHeaderInKB int64  `toml:"maxResponseHeaderInKb"`
+	MaxRequestSizeInKB    uint64 `toml:"maxRequestSizeInKb"`
+	MaxResponseSizeInKB   uint64 `toml:"maxResponseSizeInKb"`
+	MaxIdleConns          int    `toml:"maxIdleConns"`
+	MaxIdleConnsPerHost   int    `toml:"maxIdleConnsPerHost"`
+	MaxConnsPerHost       int    `toml:"maxConnsPerHost"`
+	MaxResponseHeaderInKB int64  `toml:"maxResponseHeaderInKb"`
 }
 
 // https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
 // https://i.stack.imgur.com/OWegJ.png
 type timeouts struct {
-	ClientTimeoutMS uint32 `toml:"clientTimeoutMs"`
+	ClientTimeout uint32 `toml:"clientTimeout"`
 	// DialerTimeoutMS limits the time spent establishing a TCP connection (if a new one is needed)
-	DialerTimeoutMS uint32 `toml:"dialerTimeoutMs"`
+	DialerTimeout uint32 `toml:"dialerTimeout"`
 	// TLSHandshakeTimeoutMS limits the time spent performing the TLS handshake
-	TLSHandshakeTimeoutMS uint32 `toml:"tlsHandshakeTimeoutMs"`
+	TLSHandshakeTimeout uint32 `toml:"tlsHandshakeTimeout"`
 	// ResponseHeaderTimeoutMS limits the time spent reading the headers of the response
-	ResponseHeaderTimeoutMS uint32 `toml:"responseHeaderTimeoutMs"`
+	ResponseHeaderTimeout uint32 `toml:"responseHeaderTimeout"`
 	// ExpectContinueTimeoutMS limits the time the client will wait between sending the request headers when including an
 	// Expect: 100-continue and receiving the go-ahead to send the body
-	ExpectContinueTimeoutMS uint32 `toml:"expectContinueTimeoutMs"`
+	ExpectContinueTimeout uint32 `toml:"expectContinueTimeout"`
 	// IdleConnTimeoutMS limits the amount of time an idle connection is kept in the connection pool
-	IdleConnTimeoutMS uint32 `toml:"idleConnTimeoutMs"`
+	IdleConnTimeout uint32 `toml:"idleConnTimeout"`
 }
 
 // NewConfigFromFile is for parsing the configuration from the specified file

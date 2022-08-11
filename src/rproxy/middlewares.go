@@ -20,7 +20,7 @@ func dodgeFaviconRequest(next http.Handler) http.Handler {
 // logIncomingRequest is for creating a handler func that logs all incoming requests
 func logIncomingRequest(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		now := time.Now()
+		start := time.Now()
 		lrw := &logResponseWriter{rw: w}
 		handler.ServeHTTP(lrw, r)
 
@@ -34,16 +34,16 @@ func logIncomingRequest(handler http.Handler) http.Handler {
 			logProxyToURL = "-"
 		}
 
-		log.Printf("HTTP - %s - - %s \"%s %s %s\" %d %d %s %dus\n",
+		log.Printf("HTTP - %s - - %s \"%s %s %s\" %d %d %s %0.2fs\n",
 			realIP(r),
-			now.Format("02/Jan/2006:15:04:05 -0700"),
+			start.Format("02/Jan/2006:15:04:05 -0700"),
 			r.Method,
 			logProxyToURL,
 			r.Proto,
 			lrw.Status(),
 			lrw.Size(),
 			r.UserAgent(),
-			time.Since(now),
+			time.Since(start).Seconds(),
 		)
 	})
 }

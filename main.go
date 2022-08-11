@@ -38,14 +38,14 @@ func run() error {
 		return err
 	}
 
-	listener, err := net.Listen("tcp", cfg.General.Listen)
+	l, err := net.Listen("tcp", cfg.General.Listen)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	printListenInfo(cfg, listener.Addr())
+	printListenInfo(cfg, l.Addr())
 	handler := rproxy.NewHandler(cfg)
-	return http.Serve(listener, handler)
+	return http.Serve(l, handler)
 }
 
 func warnIfMissingSharedKeySalt(cfg *rproxy.Config) {

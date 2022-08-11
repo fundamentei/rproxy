@@ -9,13 +9,17 @@ isEncryptedHeaderKey = "X-Fndm-Is-Encrypted"
 sharedKeySalt = "15365230-aa22-4f5f-aa46-f86076a0b6b2"
 
 [limits]
+maxConnsPerHost = 0
+maxIdleConns = 100
+maxIdleConnsPerHost = 2
 maxRequestSizeInKb = 10
+maxResponseHeaderInKb = 0
 maxResponseSizeInKb = 10
 
 [timeouts]
-clientTimeout = 10
-dialerTimeout = 10
+clientTimeout = 30
+dialerTimeout = 30
 expectContinueTimeout = 10
-idleConnTimeout = 10
-responseHeaderTimeout = 10
+idleConnTimeout = 90
+responseHeaderTimeout = 20
 tlsHandshakeTimeout = 10
