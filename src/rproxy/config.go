@@ -4,9 +4,10 @@ import "github.com/BurntSushi/toml"
 
 // Config is for representing all the "configurable"s
 type Config struct {
-	General  general  `toml:"general"`
-	Limits   limits   `toml:"limits"`
-	Timeouts timeouts `toml:"timeouts"`
+	General  general      `toml:"general"`
+	Limits   limits       `toml:"limits"`
+	Timeouts timeouts     `toml:"timeouts"`
+	CORS     *corsOptions `toml:"cors"`
 }
 
 type general struct {
@@ -22,6 +23,17 @@ type general struct {
 	UnsafeCORS bool `toml:"unsafeCORS"`
 	// Is the address that the proxy will listen to when running locally
 	Listen string `toml:"listen"`
+}
+
+// https://github.com/rs/cors/blob/master/cors.go#L32
+type corsOptions struct {
+	AllowedOrigins   []string `toml:"allowedOrigins"`
+	AllowedMethods   []string `toml:"allowedMethods"`
+	AllowedHeaders   []string `toml:"allowedHeaders"`
+	ExposedHeaders   []string `toml:"exposedHeaders"`
+	MaxAge           int      `toml:"maxAge"`
+	AllowCredentials bool     `toml:"allowCredentials"`
+	// AllowPrivateNetwork bool `toml:"allowPrivateNetwork"`
 }
 
 type limits struct {

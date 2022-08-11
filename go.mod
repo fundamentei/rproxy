@@ -6,6 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.2.0
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/gobwas/glob v0.2.3
+	github.com/rs/cors v1.8.2
 	github.com/samber/lo v1.27.0
 )
 

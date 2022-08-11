@@ -14,6 +14,7 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/gobwas/glob"
+	"github.com/rs/cors"
 	"github.com/samber/lo"
 )
 
@@ -26,6 +27,11 @@ type handler struct {
 	allowedHosts    []string
 	disallowedHosts []string
 
+	// When this is set to `true` it won't pass any CORS requests to the underlying server, rather the proxy will handle
+	// all requests in the "unsafe" mode, meaning, it will allow everything. That's useful for debugging purposes but
+	// not recommended in production
+	unsafeCORS bool
+
 	// Limits
 	maxRequestSizeInKb  uint64
 	maxResponseSizeInKb uint64
@@ -33,9 +39,20 @@ type handler struct {
 	httpClient *http.Client
 }
 
+type middlewareFunc func(next http.Handler) http.Handler
+
+func withMiddlewares(handler http.Handler, middlewares []middlewareFunc) http.Handler {
+	next := handler
+	for _, middleware := range middlewares {
+		next = middleware(next)
+	}
+	return next
+}
+
 // NewHandler is for creating a new handler
 func NewHandler(cfg *Config) http.Handler {
-	return gziphandler.GzipHandler(dodgeFaviconRequest(logIncomingRequest(&handler{
+
+	proxy := &handler{
 		sharedKeySalt:        strings.TrimSpace(cfg.General.SharedKeySalt),
 		isEncryptedHeaderKey: cfg.General.IsEncryptedHeaderKey,
 
@@ -43,14 +60,52 @@ func NewHandler(cfg *Config) http.Handler {
 		allowedHosts:    cfg.General.AllowedHosts,
 		disallowedHosts: cfg.General.DisallowedHosts,
 
+		unsafeCORS: cfg.General.UnsafeCORS,
+
 		maxRequestSizeInKb:  cfg.Limits.MaxRequestSizeInKB,
 		maxResponseSizeInKb: cfg.Limits.MaxResponseSizeInKB,
 
 		httpClient: makeClientFromConfig(cfg),
-	})))
+	}
+
+	defaultMiddlewares := []middlewareFunc{
+		logIncomingRequest,
+		dodgeFaviconRequest,
+		gziphandler.GzipHandler,
+	}
+
+	// Configure CORS if necessary
+	if cfg.CORS != nil {
+		return withMiddlewares(
+			proxy,
+			append(defaultMiddlewares, cors.New(cors.Options{
+				AllowCredentials: cfg.CORS.AllowCredentials,
+				AllowedHeaders:   cfg.CORS.AllowedHeaders,
+				AllowedMethods:   cfg.CORS.AllowedMethods,
+				AllowedOrigins:   cfg.CORS.AllowedOrigins,
+				ExposedHeaders:   cfg.CORS.ExposedHeaders,
+				MaxAge:           cfg.CORS.MaxAge,
+			}).Handler),
+		)
+	} else if cfg.General.UnsafeCORS {
+		return withMiddlewares(
+			proxy,
+			append(defaultMiddlewares, cors.AllowAll().Handler),
+		)
+	}
+
+	return withMiddlewares(proxy, defaultMiddlewares)
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Not implemented yet
+	// if h.unsafeCORS {
+	// 	if r.Method == http.MethodOptions {
+	// 		w.WriteHeader(http.StatusNoContent)
+	// 		return
+	// 	}
+	// }
+
 	w.Header().Set(h.isEncryptedHeaderKey, "false")
 	// Verify if the method we're requesting the destination with is allowed
 	if !lo.Contains(h.allowedMethods, r.Method) {

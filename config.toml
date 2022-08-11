@@ -23,3 +23,12 @@ expectContinueTimeout = 10
 idleConnTimeout = 90
 responseHeaderTimeout = 20
 tlsHandshakeTimeout = 10
+
+[cors]
+allowCredentials = true
+allowPrivateNetwork = true
+allowedHeaders = ["*"]
+allowedMethods = ["GET", "POST", "OPTIONS"]
+allowedOrigins = ["*"]
+exposedHeaders = []
+maxAge = 3600
