@@ -25,7 +25,15 @@ func main() {
 }
 
 func run() error {
-	cfgFile := rproxy.IfTrueElse(isRunningInLambda, "config.production.toml", "config.toml")
+	cfgFile := "config.toml"
+	// If we're on AWS Lambda, loads the config from the appropriate file.
+	if isRunningInLambda {
+		if _, err := os.Stat("config.production.toml"); err == nil {
+			cfgFile = "config.production.toml"
+		} else {
+			warnAboutMissingProductionConfigFile()
+		}
+	}
 	cfg, err := rproxy.NewConfigFromFile(cfgFile)
 	if err != nil {
 		return err
@@ -46,6 +54,15 @@ func run() error {
 	printListenInfo(cfg, l.Addr())
 	handler := rproxy.NewHandler(cfg)
 	return http.Serve(l, handler)
+}
+
+func warnAboutMissingProductionConfigFile() {
+	log.Println(
+		"WARNING: Looks like you're running on production and `config.production.toml` is missing. You should consider " +
+			"adding it instead of `config.toml` which is mainly used for development with exposed keys. Also, if you're " +
+			"running on AWS Lambda and the file is present in your local FS, make sure your deployment step isn't " +
+			"configured to exclude it from the package.",
+	)
 }
 
 func warnIfMissingSharedKey(cfg *rproxy.Config) {
