@@ -20,8 +20,9 @@ import (
 
 type handler struct {
 	// General
-	sharedKey            string
-	isEncryptedHeaderKey string
+	sharedKey             string
+	sharedKeyOriginHeader string
+	isEncryptedHeaderKey  string
 
 	allowedMethods  []string
 	allowedHosts    []string
@@ -53,8 +54,9 @@ func withMiddlewares(handler http.Handler, middlewares []middlewareFunc) http.Ha
 func NewHandler(cfg *Config) http.Handler {
 
 	proxy := &handler{
-		sharedKey:            strings.TrimSpace(cfg.General.SharedKey),
-		isEncryptedHeaderKey: cfg.General.IsEncryptedHeaderKey,
+		sharedKey:             strings.TrimSpace(cfg.General.SharedKey),
+		sharedKeyOriginHeader: strings.TrimSpace(cfg.General.SharedKeyOriginHeader),
+		isEncryptedHeaderKey:  cfg.General.IsEncryptedHeaderKey,
 
 		allowedMethods:  cfg.General.AllowedMethods,
 		allowedHosts:    cfg.General.AllowedHosts,
@@ -158,6 +160,9 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	preq.RequestURI = ""
 	h.copyHeaders(preq.Header, r.Header)
 	h.delHopHeaders(preq.Header)
+	if h.sharedKeyOriginHeader != "" {
+		preq.Header.Set(h.sharedKeyOriginHeader, h.sharedKey)
+	}
 
 	forwardedFor := realIP(r)
 	// If we aren't the first proxy retain prior X-Forwarded-For information as a comma+space separated list and fold

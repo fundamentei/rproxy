@@ -15,11 +15,14 @@ type general struct {
 	// header to encrypt the traffic, by adding a shared key that's only known between the proxy and the client, we can
 	// ensure that nothing will leak since nobody will be able to know that key that's only shared among the VM and the
 	// proxy
-	SharedKey            string   `toml:"sharedKey"`
-	IsEncryptedHeaderKey string   `toml:"isEncryptedHeaderKey"`
-	AllowedHosts         []string `toml:"allowedHosts"`
-	DisallowedHosts      []string `toml:"disallowedHosts"`
-	AllowedMethods       []string `toml:"allowedMethods"`
+	SharedKey string `toml:"sharedKey"`
+	// Defines the header name that the shared key will sent on. This is useful if you want to authenticate requests
+	// originating from the proxy, in case your API is already public
+	SharedKeyOriginHeader string   `toml:"sharedKeyOriginHeader"`
+	IsEncryptedHeaderKey  string   `toml:"isEncryptedHeaderKey"`
+	AllowedHosts          []string `toml:"allowedHosts"`
+	DisallowedHosts       []string `toml:"disallowedHosts"`
+	AllowedMethods        []string `toml:"allowedMethods"`
 	// If enabled it won't pass through CORS requests. Not implemented yet
 	UnsafeCORS bool `toml:"unsafeCORS"`
 	// Is the address that the proxy will listen to when running locally

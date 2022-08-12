@@ -1,12 +1,19 @@
 [general]
+# A list of hosts that the proxy is allowed to request
 allowedHosts = ["*.fundamentei.io", "*.fundamentei.com", "*.fndm.to", "localhost:*", "localhost", "httpbin.org"]
+# A list of HTTP methods that are allowed to be used to request the proxy
 allowedMethods = ["GET", "POST", "OPTIONS"]
 # Use ":0" if you want to bind on the next available port
 listen = ":25256"
-# This is mainly to avoid recursion
+# Defines a list of hosts that the proxy will never forward the request to. This is mainly to avoid recursion for when
+# the proxy is deployed under the same domain as the primary origins
 disallowedHosts = ["rproxy.fundamentei.io", "rproxy.fndm.to"]
+# The name of the header that will be set on the proxy response indicating whether or not it's encrypted
 isEncryptedHeaderKey = "X-Fndm-Is-Encrypted"
 sharedKey = "15365230-aa22-4f5f-aa46-f86076a0b6b2"
+# This is the header name that the shared key will be sent on. Useful if you want to know that it's a request made by
+# the proxy without relying on IP addresses or other weirdness
+sharedKeyOriginHeader = "X-Fndm-Rproxy-Shared-Key"
 
 [cors]
 allowCredentials = true
@@ -26,8 +33,14 @@ maxResponseSizeInKb = 10
 
 [timeouts]
 clientTimeout = 30
+# Limits the time spent establishing a TCP connection (if a new one is needed)
 dialerTimeout = 30
+# Limits the time the client will wait between sending the request headers when including an Expect: 100-continue and
+# receiving the go-ahead to send the body
 expectContinueTimeout = 10
+# Limits the amount of time an idle connection is kept in the connection pool
 idleConnTimeout = 90
+# Limits the time spent reading the headers of the response
 responseHeaderTimeout = 20
+# Limits the time spent performing the TLS handshake
 tlsHandshakeTimeout = 10
