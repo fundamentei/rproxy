@@ -2,29 +2,44 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://s.fndm.to/aeonik/index.css" />
+    <style type="text/css">
+      body {
+        background-color: #fafafa;
+        font-family: "Aeonik";
+        font-weight: bold;
+        font-size: 12px;
+        line-height: 1.33;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+      }
+    </style>
   </head>
   <body>
-    <script type="module">
+    <div>
+      <h1>Open the console. See the "Network" tab, and try to see the <em>response</em>.</h1>
+    </div>
+    <script type="module" type="application/javascript">
       import init, { proxy, build_info } from "./dist/asma/main.js";
       (async () => {
+        // Initialize the decryption VM
         await init();
+        // Prints build information. This is useful to put in Sentry metadata and stuff like that...
+        console.log(build_info());
 
-        const authorization =
-          "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjVkYTM3OWQ2ZGIxOGJiNzAzNTU0Y2QyOCIsImZpcnN0TmFtZSI6IkFuZHJleSIsImxhc3ROYW1lIjoiS251cHAgVml0YWwiLCJwaWN0dXJlVXJsIjpudWxsLCJlbWFpbCI6ImFuZHJleWt2aXRhbEBnbWFpbC5jb20ifSwiaWF0IjoxNjU5NzMwMDA3LCJleHAiOjE2Njc1MDYwMDd9.YKA0GvrC0V_hdYsS_Xfz4KsRNYaG25A5VR1P3BlmKB89HM076GlcuQgDU7TJ7B5haw5xfO0lgLFof3Mz-nQrJA";
-        const response = await fetch("http://localhost:25256/https://production.api-lambda.fundamentei.io/", {
-          method: "POST",
-          body: JSON.stringify({
-            query: "query Now { now }",
-            variables: {},
-            operationName: "Now"
-          }),
-          headers: {
-            "content-type": "application/json",
-            authorization
-          }
-        });
-
+        // This is normally the value of the `Authorization` header that you send to the server
+        // to authorize the clients, if you don't want to pass it to the proxy and only keep
+        // the `Shared Key`, it's fine. Otherwise, it adds another layer of security by encrypting
+        // responses individually with everyone's token.
+        const authorization = "";
+        const response = await fetch("http://localhost:25256/https://httpbin.org/json");
+        // Grab everything that came back from the proxy response as a bytes array
         const bytes = await response.arrayBuffer();
+        // ...and send it to the VM for decryption
         console.log(await proxy(new Uint8Array(bytes), authorization));
       })();
     </script>

@@ -8,8 +8,42 @@ fuck we're doing under the hood—and if they do, they deserve to access the dat
 
 ## How do I use it?
 
-```SH
+1. First you'll need to build the decryption VM
 
+```SH
+$ make build-asma shared-key="15365230-aa22-4f5f-aa46-f86076a0b6b2"
+```
+
+> The key `15365230-aa22-4f5f-aa46-f86076a0b6b2` will be **_shared_** between the VM and the proxy. It will be used to encrypt all the data and it should be kept in secret. 🤫
+
+2. Configure the proxy. Open `config.toml` and figure out what's good for you. It's documented.
+3. Run the proxy!
+
+```SH
+$ go run main.go
+```
+
+It will listen on `:25259`. You can go ahead and make a request to it using httpie or cURL—whatever. But you can also try to `python3 -m http.server` and open the `index.html` we've put together that shows how to use the VM to the decrypt the proxy responses. Here's everything you need:
+
+```TS
+import init, { proxy, build_info } from "./dist/asma/main.js";
+(async () => {
+  // Initialize the decryption VM
+  await init();
+  // Prints build information. This is useful to put in Sentry metadata and stuff like that...
+  console.log(build_info());
+
+  // This is normally the value of the `Authorization` header that you send to the server
+  // to authorize the clients, if you don't want to pass it to the proxy and only keep
+  // the `Shared Key`, it's fine. Otherwise, it adds another layer of security by encrypting
+  // responses individually with everyone's token.
+  const authorization = "";
+  const response = await fetch("http://localhost:25256/https://httpbin.org/json");
+  // Grab everything that came back from the proxy response as a bytes array
+  const bytes = await response.arrayBuffer();
+  // ...and send it to the VM for decryption
+  console.log(await proxy(new Uint8Array(bytes), authorization));
+})();
 ```
 
 ## How does it work?

@@ -140,9 +140,11 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Rebuilds from scratch the URL we're proxying to
+	destinationURL := fmt.Sprintf("%s://%s%s", proxyToURL.Scheme, proxyToURL.Host, proxyToURL.Path)
+	log.Printf("Sending a %q request to %q", r.Method, destinationURL)
 	preq, err := http.NewRequest(
 		r.Method,
-		fmt.Sprintf("%s://%s", proxyToURL.Scheme, proxyToURL.Host),
+		destinationURL,
 		// Limit the amount of data we read from the request before passing it to the destination
 		io.LimitReader(r.Body, int64(h.maxRequestSizeInKb)*1024),
 	)
