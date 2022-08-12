@@ -16,7 +16,7 @@ $ make build-asma shared-key="15365230-aa22-4f5f-aa46-f86076a0b6b2"
 
 > The key `15365230-aa22-4f5f-aa46-f86076a0b6b2` will be **_shared_** between the VM and the proxy. It will be used to encrypt all the data and it should be kept in secret. 🤫
 
-2. Configure the proxy. Open `config.toml` and figure out what's good for you. It's documented.
+2. Configure the proxy. Open [`config.toml`](./config.toml) and figure out what's good for you. It's documented;
 3. Run the proxy!
 
 ```SH
