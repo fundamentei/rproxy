@@ -6,3 +6,4 @@ serverless.yml
 pnpm-lock.yaml
 package.json
 .serverless
+config.production.toml

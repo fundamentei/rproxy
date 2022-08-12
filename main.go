@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	"fundamentei.io/rproxy/src/rproxy"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
 )
 
 var (
@@ -40,6 +42,12 @@ func run() error {
 	}
 
 	warnIfMissingSharedKey(cfg)
+	proxy := rproxy.NewHandler(cfg)
+
+	if isRunningInLambda {
+		lambda.Start(httpadapter.NewV2(proxy).ProxyWithContext)
+		return nil
+	}
 
 	// Make sure the provided config is valid by trying to parse it
 	if _, _, err := net.SplitHostPort(cfg.General.Listen); err != nil {
@@ -52,8 +60,7 @@ func run() error {
 	}
 
 	printListenInfo(cfg, l.Addr())
-	handler := rproxy.NewHandler(cfg)
-	return http.Serve(l, handler)
+	return http.Serve(l, proxy)
 }
 
 func warnAboutMissingProductionConfigFile() {
